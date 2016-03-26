@@ -1,9 +1,4 @@
 ﻿# Encode-All 
-#$exe = 'C:\Program Files\Handbrake\HandBrakeCLI.exe' #singled quoted path to HandBrakeCLI.exe ex.- 'C:\Program Files\Handbrake\HandBrakeCLI.exe'
-#$InDir = 'X:\media\Video\ISO\New'                    #singled quoted path to input ISOs ex.- 'X:\media\Video\ISO\New'
-#$DoneDir = 'X:\media\Video\ISO\Processed'            #singled quoted destination path for completed ISOs ex.- 'X:\media\Video\ISO\Processed'
-#$OutPath = 'D:\VideoProcessing\MKV'                  #singled quoted path for new video files.  ex.- 'D:\VideoProcessing\MKV'
-# Note: Don't set your OutPath to drop your files directly into a media server if you want to do post processing, such as renaming.
 
 param(
     [string]$exe = 'C:\Program Files\Handbrake\HandBrakeCLI.exe',
