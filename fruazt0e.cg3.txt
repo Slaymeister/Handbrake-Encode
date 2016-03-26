@@ -1,4 +1,7 @@
-﻿
+﻿Fixed moving files to done directory when completed
+Added the creation of a renamer file with default entries, no processing implemented, yet
+Implemented -Overwrite
+Implemented -Movedone
 # Please enter the commit message for your changes. Lines starting
 # with '#' will be ignored, and an empty message aborts the commit.
 # On branch master
