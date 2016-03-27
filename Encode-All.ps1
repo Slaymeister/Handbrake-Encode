@@ -126,20 +126,20 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
             }
 
         }
-    }
-    #Generate default renamer if one does not exist
-    If ($RenamerFileExists -match $false) {
-    New-Item $RenamerFile -ItemType File
-    Add-Content $RenamerFile "CATEGORY,"
-    Get-ChildItem $OutDir -filter *.mkv | ForEach-Object {
-        $OutputFileBaseName = $_.BaseName 
-        Add-Content $RenamerFile "RENAME,$OutputFileBaseName,$OutputFileBaseName"
+    
+        #Generate default renamer if one does not exist
+        If ($RenamerFileExists -match $false) {
+        New-Item $RenamerFile -ItemType File
+        Add-Content $RenamerFile "CATEGORY,"
+        Get-ChildItem $OutDir -filter *.mkv | ForEach-Object {
+            $OutputFileBaseName = $_.BaseName 
+            Add-Content $RenamerFile "RENAME,$OutputFileBaseName,$OutputFileBaseName"
+            }
+        }
+        
+        if ($MoveDone -match $true) {
+            Move-Item "$InDir\$FileSetFilter" -Destination "$DoneDir\"
         }
     }
-        
-    if ($MoveDone -match $true) {
-        Move-Item "$InDir\$FileSetFilter" -Destination "$DoneDir\"
-    }
-
 }
 
