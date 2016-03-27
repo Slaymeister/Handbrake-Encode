@@ -82,7 +82,7 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
     $FileSet = Get-ChildItem -Path "$InDir" -Filter "$FileSetFilter"
 
     #Don't do anything if the output sub directory already exists.  If you want to redo the encode, just move or delete the directory.
-    if (!(Test-Path $OutDir){
+    if (!(Test-Path $OutDir)){
 
             #Test to see if the input file is locked, such as if it is open in an editor or it is an ISO being ripped directly into $InDir
             $FileLocked = Test-FileLock ($input)
