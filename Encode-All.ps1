@@ -107,7 +107,7 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
                             $PathExists = Test-Path $OutDir
                         }
                         
-                        $cmd_Arguments = "/s /c `"(`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`")&(echo `"Handbrake $input completion errorlevel = %errorlevel%`">>$TempLog)`""
+                        $cmd_Arguments = "/s /c `"(`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`")&(echo `"Handbrake $input completion errorlevel = %errorlevel%`">>`"$TempLog`")`""
                         $LogDate = Get-Date; Add-Content $LogFile "`n`n`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`""
                         if ($SkipEncode -notmatch $true){
                             Start-Process -FilePath c:\windows\system32\cmd.exe -RedirectStandardError $TempLog -Wait -ArgumentList "$cmd_Arguments"
