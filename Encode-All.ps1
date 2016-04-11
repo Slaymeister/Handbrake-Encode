@@ -23,7 +23,7 @@ param(
     [string]$Handbrake_SubtitleOptions = '--subtitle scan,1,2,3,4,5,6,7,8,9,10 --native-language eng --native-dub'
     [string]$Handbrake_Parameters = "$Handbrake_GeneralOptions $Handbrake_SourceOptions $Handbrake_DestinationOptions $Handbrake_VideoOptions $Handbrake_AudioOptions $Handbrake_PictureSettings $Handbrake_Filters $Handbrake_SubtitleOptions"
     #https://trac.handbrake.fr/wiki/CLIGuide
-    $DoneDir = "$DoneDir\" -replace "\\","\"
+    $DoneDir = "$DoneDir\" -replace "\\\\","\"
 
 function Test-FileLock {
       param ([parameter(Mandatory=$true)][string]$Path)
@@ -58,7 +58,7 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
     $inputBaseName = $_.BaseName
 
     #Figure out subdirectory names based on the source
-    $OutDir = $OutPath + '\' + $inputBaseName -replace "\\","\"
+    $OutDir = "$OutPath\$inputBaseName" -replace "\\\\","\"
     
 
     #If a single log wasn't specified, create a per job log file next to the output files
