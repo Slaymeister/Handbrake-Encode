@@ -13,7 +13,7 @@ param(
     )
 
     #Specify Handbrake parameters by category
-    [string]$Handbrake_GeneralOptions = ''
+    [string]$Handbrake_GeneralOptions = '-v1'
     [string]$Handbrake_SourceOptions = ''
     [string]$Handbrake_DestinationOptions = '--markers --format mkv --use-hwd'
     [string]$Handbrake_VideoOptions = '--encoder x264 --quality 20.0 --x264-preset veryslow --x264-profile high --h264-level 4.1 --vfr'
@@ -23,6 +23,7 @@ param(
     [string]$Handbrake_SubtitleOptions = '--subtitle scan,1,2,3,4,5,6,7,8,9,10 --native-language eng --native-dub'
     [string]$Handbrake_Parameters = "$Handbrake_GeneralOptions $Handbrake_SourceOptions $Handbrake_DestinationOptions $Handbrake_VideoOptions $Handbrake_AudioOptions $Handbrake_PictureSettings $Handbrake_Filters $Handbrake_SubtitleOptions"
     #https://trac.handbrake.fr/wiki/CLIGuide
+    $DoneDir = "$DoneDir\" -replace "\\","\"
 
 function Test-FileLock {
       param ([parameter(Mandatory=$true)][string]$Path)
@@ -51,12 +52,14 @@ function Test-FileLock {
 }
 
 Get-ChildItem $InDir\*.iso | ForEach-Object {
+    Write-Host "`n"
     $input=$_
+    Write-Host "Begin processing $input."
     $inputBaseName = $_.BaseName
 
     #Figure out subdirectory names based on the source
-    $OutDir = $OutPath + '\' + $inputBaseName
-
+    $OutDir = $OutPath + '\' + $inputBaseName -replace "\\","\"
+    
 
     #If a single log wasn't specified, create a per job log file next to the output files
     if ($LogFileParam -match "") {
@@ -93,8 +96,8 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
                     if ($a -le 9){$TrackNumberString = "0$a"}
                         else {$TrackNumberString = $a}
 
-                        
                     $output = "$OutDir\$inputBaseName-$TrackNumberString.mkv"
+                    Write-Host "Beginning processing for $output." 
                     $FileExists = Test-Path $output
         
                     #Test if file already exists.  Just in case two encoders manage to start in on the same source.
@@ -107,39 +110,42 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
                             $PathExists = Test-Path $OutDir
                         }
                         
-                        $cmd_Arguments = "/s /c `"(`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`")&(echo `"Handbrake $input completion errorlevel = %errorlevel%`">>`"$TempLog`")`""
+                        $cmd_Arguments = "/s /c `"(`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`")`""
                         $LogDate = Get-Date; Add-Content $LogFile "`n`n`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`""
                         if ($SkipEncode -notmatch $true){
                             Start-Process -FilePath c:\windows\system32\cmd.exe -RedirectStandardError $TempLog -Wait -ArgumentList "$cmd_Arguments"
-                            Add-Content -Path $LogFile -Value (Get-Content $TempLog); Remove-Item $TempLog
-                            Add-Content $LogFile "`nCMD ErrorLevel $output = $LASTEXITCODE"
+                            $EncodeExitCode = $LASTEXITCODE
+                            Add-Content $LogFile "`nAdd Encode Log $TempLog to $LogFile"
+                            Add-Content -Path $LogFile -Value (Get-Content $TempLog)
+                            Add-Content $LogFile "`nRemove Temporary Log File $TempLog"
+                            Remove-Item $TempLog
+                            Add-Content $LogFile "`nCMD ErrorLevel $output = $EncodeExitCode"
                             }
                         else {Add-Content $LogFile "`nEncode Skipped by user option.`n"}
 
                         #if ($LASTEXITCODE -eq 1) {$ProcessError = $true}
                         #Handbrake errors being produced on missing tracks.
                     }
+                    else {Write-host "File exists and not set to overwrite.  Skipping."}
                 }
-        
-            if ($MoveDone -match $true) {
-                Move-Item "$InDir\$FileSetFilter" -Destination "$DoneDir\"
-            }
-
         }
-    
+            else {Write-Host "$input is locked.  Aborting Processing."}
         #Generate default renamer if one does not exist
         If ($RenamerFileExists -match $false) {
         New-Item $RenamerFile -ItemType File
         Add-Content $RenamerFile "CATEGORY,"
         Get-ChildItem $OutDir -filter *.mkv | ForEach-Object {
             $OutputFileBaseName = $_.BaseName 
-            Add-Content $RenamerFile "RENAME,$OutputFileBaseName,$OutputFileBaseName"
+            Add-Content $RenamerFile "`nRENAME,$OutputFileBaseName,$OutputFileBaseName"
             }
         }
         
         if ($MoveDone -match $true) {
-            Move-Item "$InDir\$FileSetFilter" -Destination "$DoneDir\"
+            Add-Content $LogFile "`nMove $InDir\$FileSetFilter to $DoneDir"
+            Move-Item "$InDir\$FileSetFilter" -Destination "$DoneDir"
         }
     }
+    else {Write-Host "Output Path Already Exists.  Aborting Processing for $input."}
+    Write-Host "`n"
 }
 
