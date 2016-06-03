@@ -80,6 +80,10 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
     $RenamerFileExists = Test-Path ($RenamerFile)
     #TempLog is used to hold StdErr during an encode, then is added to the main log file (master log file or per job log file) after the encode is complete.
     $TempLog = "$OutDir\$inputBaseName.templog"
+    $ScanFile = "$InDir\$inputBaseName.scan"
+    $ScanFileExists = Test-Path ($ScanFile)
+
+
     #Identify all of the source files so they can be moved after the job.
     [string]$FileSetFilter = "$inputBaseName.*"
     $FileSet = Get-ChildItem -Path "$InDir" -Filter "$FileSetFilter"
@@ -90,8 +94,19 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
             #Test to see if the input file is locked, such as if it is open in an editor or it is an ISO being ripped directly into $InDir
             $FileLocked = Test-FileLock ($input)
             if ($FileLocked -notmatch $true){ 
-                #Process a single title at a time.  It tries 100 chapters rather than trying to figure out how many are really there. 
-                for ($a = 1; $a -le 100; $a++){
+                
+                #[disabled]Process a single title at a time.  It tries 100 chapters rather than trying to figure out how many are really there. 
+                #[disabled]for ($a = 1; $a -le 100; $a++){
+
+                #Figure out what titles exist
+                #Start by Scanning the ISO
+                $cmd_Arguments = "/s /c `"(`"$exe`" --input `"$input`" --title 0)`""
+                Start-Process -FilePath c:\windows\system32\cmd.exe -RedirectStandardError $ScanFile -Wait -ArgumentList "$cmd_Arguments" -WindowStyle Minimized
+                #Then pull out the title information and put it into an array
+                $TitleArray = Select-String -Path $ScanFile -Pattern "\+ title" | %{$_.line.split("\:"" ")[-2]}
+                
+                #Process titles separately
+                foreach ($a in $TitleArray){
                     
                     if ($a -le 9){$TrackNumberString = "0$a"}
                         else {$TrackNumberString = $a}
@@ -113,7 +128,7 @@ Get-ChildItem $InDir\*.iso | ForEach-Object {
                         $cmd_Arguments = "/s /c `"(`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`")`""
                         $LogDate = Get-Date; Add-Content $LogFile "`n`n`"$exe`" $Handbrake_Parameters --input `"$input`" --title $a --output `"$output`""
                         if ($SkipEncode -notmatch $true){
-                            Start-Process -FilePath c:\windows\system32\cmd.exe -RedirectStandardError $TempLog -Wait -ArgumentList "$cmd_Arguments"
+                            Start-Process -FilePath c:\windows\system32\cmd.exe -RedirectStandardError $TempLog -Wait -ArgumentList "$cmd_Arguments" -WindowStyle Minimized
                             $EncodeExitCode = $LASTEXITCODE
                             Add-Content $LogFile "`nAdd Encode Log $TempLog to $LogFile"
                             Add-Content -Path $LogFile -Value (Get-Content $TempLog)
